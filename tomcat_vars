@@ -1,13 +1,7 @@
 java_v: java-1.8.0-openjdk
-
 set_java: jre-1.8.0-openjdk
-
 http_port: 9090
-
-tomcat_version: 9.0.26
-
+tomcat_version: 9.0.38
 tomcat_user: admin 
-
 tomcat_pass: admin
-
-tomcat_url: "https://mirrors.fibergrid.in/apache/tomcat/tomcat-{{tomcat_version.split('.')[0]}}/v{{tomcat_version}}/bin/apache-tomcat-{{tomcat_version}}.tar.gz"
+tomcat_url: "https://mirrors.estointernet.in/apache/tomcat/tomcat-{{tomcat_version.split('.')[0]}}/v{{tomcat_version}}/bin/apache-tomcat-{{tomcat_version}}.tar.gz"
