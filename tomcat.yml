@@ -3,10 +3,8 @@
     hosts: webservers
     gather_facts: false
     become: yes
-    
-    vars:
+    vars_files:
       - tomcat_vars
-    
     tasks:
      - name: Updating repos
        yum:
