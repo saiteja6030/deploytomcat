@@ -1,10 +1,7 @@
 node{
 	stage(' Checkout')
 	{
-		steps
-		{
-			git branch: 'master', url: 'https://github.com/saiteja6030/deploytomcat.git'
-		}
+	   git branch: 'master', url: 'https://github.com/saiteja6030/deploytomcat.git'
 	}
 	stage('Execute Ansible')
 	{
