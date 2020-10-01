@@ -1,6 +1,6 @@
 java_v: java-1.8.0-openjdk
 
-set_java: jre-1.8.0-openjdk.x86_64
+set_java: jre-1.8.0-openjdk
 
 http_port: 9090
 
