@@ -38,7 +38,7 @@
      - name: Renaming tomcat home
        command: mv /usr/local/apache-tomcat-{{tomcat_version}} /usr/local/tomcat
 
-	   - name: replace tomcat port in server config
+     - name: replace tomcat port in server config
        template:
         src: server.xml.j2
         dest: /usr/local/tomcat/conf/server.xml 
