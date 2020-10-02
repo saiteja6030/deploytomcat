@@ -1,85 +1,81 @@
 ---
-- name: installing & configuring tomcat
-  hosts: webservers
-  become: yes
-  become_method: sudo
-  remote_user: ec2-user
-  handlers:
-  - name: restart tomcat
-    service:
-     name: tomcat
-     state: restarted
-  
-  vars_files:
-    - tomcat_vars
-  
-  tasks:
-  - name: install java 
-    yum:
-     name: "{{ req_java }}"
-     state: present
-
-  - name: setting default java 
-    alternatives:
-     name: java
-     link: /usr/bin/java
-     path: /usr/lib/jvm/{{ set_java }}/bin/java
-
-  - name: add group "tomcat"
-    group: 
-     name: tomcat
-
-  - name: add user "tomcat"
-    user: 
-     name: tomcat 
-     group: tomcat
-     home: /usr/share/tomcat
-     createhome: no
-     
-  - name: download tomcat latest packages
-    get_url:
-     url: "{{ tomcat_url }}"
-     dest: "{{ tomcat_dest }}"
-     
-  - name: create tomcat directory
-    file:
-     path: /usr/share/tomcat
-     state: directory
-     mode: 0755
+  - name: Install and configure tomcat
+    hosts: webservers
+    gather_facts: false
+    become: yes
+    vars_files:
+      - tomcat_vars
     
-  - name: extract tomcat packages
-    unarchive:
-     src: "{{ tomcat_dest }}"
-     dest: /usr/share/tomcat
-     remote_src: yes
-      
-  - name: Change ownership of Tomcat installation
-    file: 
-     path: /usr/share/tomcat
-     owner: tomcat
-     group: tomcat
-     mode: "u+rwx,g+rx,o=rx"
-     state: directory
-     recurse: yes
-  
-  - name: Replace tomcat port with dynamic port
-    template:
-     src: server.xml.j2
-     dest: /usr/share/tomcat/apache-tomcat-9.0.38/conf/server.xml
-    notify: restart tomcat
+    tasks:
+     - name: Updating repos
+       yum:
+        name: "*"
+        state: latest
 
-  - name: Set tomcat credentials
-    template:
-     src: users.xml.j2
-     dest: /usr/share/tomcat/apache-tomcat-9.0.38/conf/tomcat-users.xml
-    notify: restart tomcat
-       
-  - name: Install Tomcat init script
-    copy: 
-     src: tomcat-initscript.sh
-     dest: /etc/init.d/tomcat 
-     mode: 0755
+     - name: Installing Openjdk
+       yum:
+        name: "{{java_v}}"
+        state: present
 
-  - name: Start Tomcat
-    command: nohup /usr/share/tomcat/apache-tomcat-9.0.38/bin/startup.sh 
-    tags: starttom
+     - name: Setting default Java
+       alternatives:
+        name: java
+        link: /usr/bin/java
+        path: /usr/lib/jvm/{{set_java}}/bin/java
+
+     - name: Downloading tomcat
+       get_url:
+        url: "{{tomcat_url}}"
+        dest: /home/ec2-user
+
+     - name: Extracting downloaded tar file
+       unarchive:
+        src: "/home/ec2-user/apache-tomcat-{{tomcat_version}}.tar.gz"  
+        dest: /home/ec2-user
+        remote_src: yes
+
+     - name: add group "tomcat"
+       group: 
+        name: tomcat
+
+     - name: add user "tomcat"
+       user: 
+        name: tomcat 
+        group: tomcat
+        home: /home/ec2-user/tomcat
+        createhome: no
+
+     - name: create tomcat directory
+       file:
+        path: /home/ec2-user/tomcat
+        owner: tomcat
+        group: tomcat
+        mode: "u+rwx,g+rx,o=rx"
+        state: directory
+        recurse: yes
+
+     - name: Renaming tomcat home
+       command: mv /home/ec2-user/apache-tomcat-{{tomcat_version}} /home/ec2-user/tomcat
+
+     - name: replace tomcat port in server config
+       template:
+        src: server.xml.j2
+        dest: /home/ec2-user/tomcat/conf/server.xml 
+    
+     - name: Updating users and role
+       template:
+        src: tomcat-users.xml.j2
+        dest: /home/ec2-user/tomcat/conf/tomcat-users.xml
+    
+     - name: Updating context xml restriction
+       template:
+        src: context.xml.j2
+        dest: /home/ec2-user/tomcat/webapps/manager/META-INF/context.xml
+    
+     - name: Updating restriction for host manager context
+       template:
+        src: context.xml.j2
+        dest: /home/ec2-user/tomcat/webapps/host-manager/META-INF/context.xml
+    
+     - name: Starting tomcat
+       shell: nohup /home/ec2-user/tomcat/bin/startup.sh &
