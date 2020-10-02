@@ -33,6 +33,9 @@
         src: "/home/ec2-user/apache-tomcat-{{tomcat_version}}.tar.gz"  
         dest: /home/ec2-user
         remote_src: yes
+     
+     - name: Renaming tomcat home
+       command: mv /home/ec2-user/apache-tomcat-{{tomcat_version}} /home/ec2-user/tomcat
 
      - name: add group "tomcat"
        group: 
@@ -44,8 +47,8 @@
         group: tomcat
         home: /home/ec2-user/tomcat
         createhome: no
-
-     - name: create tomcat directory
+        
+     - name: change ownership directory of tomcat
        file:
         path: /home/ec2-user/tomcat
         owner: tomcat
@@ -53,9 +56,6 @@
         mode: "u+rwx,g+rx,o=rx"
         state: directory
         recurse: yes
-
-     - name: Renaming tomcat home
-       command: mv /home/ec2-user/apache-tomcat-{{tomcat_version}}/* /home/ec2-user/tomcat/
 
      - name: replace tomcat port in server config
        template:
