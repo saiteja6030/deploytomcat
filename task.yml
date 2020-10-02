@@ -55,7 +55,7 @@
         recurse: yes
 
      - name: Renaming tomcat home
-       command: mv /home/ec2-user/apache-tomcat-{{tomcat_version}} /home/ec2-user/tomcat
+       command: mv /home/ec2-user/apache-tomcat-{{tomcat_version}}/* /home/ec2-user/tomcat/
 
      - name: replace tomcat port in server config
        template:
