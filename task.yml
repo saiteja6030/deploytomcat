@@ -1,0 +1,85 @@
+---
+- name: installing & configuring tomcat
+  hosts: webservers
+  become: yes
+  become_method: sudo
+  remote_user: ec2-user
+  handlers:
+  - name: restart tomcat
+    service:
+     name: tomcat
+     state: restarted
+  
+  vars_files:
+    - tomcat_vars
+  
+  tasks:
+  - name: install java 
+    yum:
+     name: "{{ req_java }}"
+     state: present
+
+  - name: setting default java 
+    alternatives:
+     name: java
+     link: /usr/bin/java
+     path: /usr/lib/jvm/{{ set_java }}/bin/java
+
+  - name: add group "tomcat"
+    group: 
+     name: tomcat
+
+  - name: add user "tomcat"
+    user: 
+     name: tomcat 
+     group: tomcat
+     home: /usr/share/tomcat
+     createhome: no
+     
+  - name: download tomcat latest packages
+    get_url:
+     url: "{{ tomcat_url }}"
+     dest: "{{ tomcat_dest }}"
+     
+  - name: create tomcat directory
+    file:
+     path: /usr/share/tomcat
+     state: directory
+     mode: 0755
+    
+  - name: extract tomcat packages
+    unarchive:
+     src: "{{ tomcat_dest }}"
+     dest: /usr/share/tomcat
+     remote_src: yes
+      
+  - name: Change ownership of Tomcat installation
+    file: 
+     path: /usr/share/tomcat
+     owner: tomcat
+     group: tomcat
+     mode: "u+rwx,g+rx,o=rx"
+     state: directory
+     recurse: yes
+  
+  - name: Replace tomcat port with dynamic port
+    template:
+     src: server.xml.j2
+     dest: /usr/share/tomcat/apache-tomcat-9.0.38/conf/server.xml
+    notify: restart tomcat
+
+  - name: Set tomcat credentials
+    template:
+     src: users.xml.j2
+     dest: /usr/share/tomcat/apache-tomcat-9.0.38/conf/tomcat-users.xml
+    notify: restart tomcat
+       
+  - name: Install Tomcat init script
+    copy: 
+     src: tomcat-initscript.sh
+     dest: /etc/init.d/tomcat 
+     mode: 0755
+
+  - name: Start Tomcat
+    command: nohup /usr/share/tomcat/apache-tomcat-9.0.38/bin/startup.sh 
+    tags: starttom
